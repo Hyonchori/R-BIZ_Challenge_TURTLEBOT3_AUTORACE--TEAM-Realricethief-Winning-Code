@@ -179,7 +179,7 @@ edge=cv2.Canny(blur,180,360)
 **3.2. 신호등 구간 (main_see.py / turtle_video.py / blob_param.py)**
 
 ![sinho](/readme_images/sinho_green.png)
-+ 신호등의 초기 상태인 초록 불빛을 로봇이 발견하면 신호등 구간으로 인식하게 한다.
++ 로봇이 신호등의 초기 상태인 초록 불빛을 발견하면 신호등 구간으로 인식
 ***
 ~~~
 	np_arr = np.fromstring(ros_data.data, np.uint8)
@@ -259,4 +259,94 @@ def setting(stage):### stage=0 -> shingho , stage=1->parking
 + turtle_video.py에서 blob_param.py에 있는 parameter사용
 + Image에 설정한 크기의 blob을 발견했을 경우 keypoint를 return
 *** 
-![sinho](/readme_images/sinho_blob.png=320x240)
+![sinho](/readme_images/sinho_blob.png)
++ Threshold값 이상의 blob이 잡힌 모습
++ TURTLEBOT은 평소 상태(stage = 100)에서 신호등 구간 미션 상태(stage = 0)로 돌입
+***
+~~~
+def shinho(blob_ROI,stage): ### Function that run when stage=0
+
+	global f_r; global s_g; global sinho_state
+	
+	sinho_state=Int8MultiArray()
+
+	if f_g==1 and f_r==0 and s_g==0:		
+		keypoints_red=turtle_video_siljun.find_color(blob_ROI,lower_red,upper_red,stage)  
+		print('first green signal detected.')
+
+		if keypoints_red:
+			f_r=1
+			sinho_state.data=np.array([1,0,1])
+			pub_sinho.publish(sinho_state)
+		else:
+			sinho_state.data=np.array([0,0,0])
+			pub_sinho.publish(sinho_state)
+		return 0
+~~~
++ 신호등 구간 미션 상태일 때 실행되는 코드, 3개의 전역 변수를 이용하여 신호등 구간 미션 진행
++ f_g: 초록 불빛을 처음 감지 시 0 -> 1 / f_r: 붉은 불빛을 처음 감지 시 0 -> 1 / s_g: 두번째로 초록 불빛을 감지 시 0 -> 1
++ 처음 초록 불빛을 감지하여 신호등 구간에 진입하면 붉은 불빛을 발견할 때까지 서행
++ sinho_state = [f_r, s_g, keypoints_red]
+***
+~~~
+	if f_g==1 and f_r==1 and s_g==0:
+		keypoints_green=turtle_video_siljun.find_color(blob_ROI,lower_green,upper_green,stage)	
+		print('red signal detected. waiting secondary green signal.')
+
+		sinho_state.data=np.array([1,0,0])
+		pub_sinho.publish(sinho_state)
+		if keypoints_green:						
+			s_g=1
+			sinho_state.data=np.array([1,1,1])
+			pub_sinho.publish(sinho_state)
+		return 0
+~~~
++ 첫번째 붉은 불빛을 감지했을 때 실행되는 코드
++ 두번째로 초록 불빛을 감지할 때까지 정지
+***
+~~~
+    if f_g == 1 and f_r == 1 and s_g == 1:
+        print('second green signal detected.')
+        s_g = 2
+        sinho_state.data = np.array([1, 2, 0])
+        pub_sinho.publish(sinho_state)
+        return 100
+~~~
++ 두번째로 초록 불빛을 감지했을 때 실행되는 코드
++ 신호등 구간 미션을 완수하고 평상시로 돌아감(stage = 100)
+
+**3.3. 주차 구간 (main_see.py / main_move.py / turtle_video.py / blob_param.py / in_jucha.py)**
++ 주차 표지판을 인식할 경우 주차 구간 미션 상태(stage = 1)로 돌입
+![park](/readme_images/parking.png)
+~~~
+###########################<<< Trainnig parking sign >>>##################################
+
+orb = cv2.ORB_create()
+bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+
+imgTrainColor=cv2.imread('parking.jpg')
+imgTrainGray = cv2.cvtColor(imgTrainColor, cv2.COLOR_BGR2GRAY)
+
+kpTrain = orb.detect(imgTrainGray,None)
+kpTrain, desTrain = orb.compute(imgTrainGray, kpTrain)
+
+#########################################################################################
+~~~
+~~~
+    if line_count < 3 and stage == 100:
+        keypoints_blue = turtle_video_siljun.find_color(parking_ROI, lower_blue, upper_blue, 1)
+        if keypoints_blue:
+            match_len = turtle_video_siljun.parking_match(keypoints_blue, image_np, orb, bf, desTrain)
+            print(match_len)
+            if match_len >= 3:
+                stage = 1
+                print('jucha!')
+~~~
+![park](/readme_images/real_parking.png)
++ 주차 표지판에 쓰인 파란색 HSV값 범위의 blob을 감지할 경우 그 blob주변 이미지가 주차 표지판이 맞는지 확인
++ OpenCV의 ORB_create함수를 사용하여 주차 표지판 Image와 카메라 Image를 서로 비교
++ 서로 Matching하여 일정 threshold값 이상이 같으면 주차 표지판이라고 인식
++ 주차 구간 미션 상태 돌입(stage = 1)
+***
+~~~
+
