@@ -16,6 +16,7 @@
 
 3. 알고리즘 설명
 ***
+***
 
 ## 1. 개요
 **1.1. 터틀봇3 오토레이스란**
@@ -42,19 +43,52 @@
 + 차단바 구간 사용 센서: HS-SR04 Ultrasonic Sensor
 + 터널 구간 사용 센서: HS-SR04 Ultrasoni Sensor, LDS-01 Lidar
 
+***
+***
 ## 2. 주행 알고리즘
 **2.1. 전체 알고리즘 개략도**
 
 ![algorithm](Algorithm.png)
 
 + 로봇 구동시 라인트레이싱 / 각 미션의 시작을 알리는 Flag 탐색 시작
-+ 신호등 구간의 Flag: 지정한 범위의 HSV값을 갖는 Blob
-+ 주차 구간의 Flag: 좌측면에 장착된 파이캠 Image의 ROI(Region of Interest)내에서 주차 표지판 이미지와 겹치는 부분
-+ 차단바 구간의 Flag: 전방에 장착된 초음파 센서가 감지하는 20cm 이하의 값
-+ 터널 구간의 Flag: 상단에 장착된 초음파 센서가 감지하는 15cm 이하의 값
++ **신호등 구간의 Flag**: 지정한 범위의 HSV값을 갖는 Blob
++ **주차 구간의 Flag**: 좌측면에 장착된 파이캠 Image의 ROI(Region of Interest)내에서 주차 표지판 이미지와 겹치는 부분
++ **차단바 구간의 Flag**: 전방에 장착된 초음파 센서가 감지하는 20cm 이하의 값
++ **터널 구간의 Flag**: 상단에 장착된 초음파 센서가 감지하는 15cm 이하의 값
 
 **2.2. 센서와 노드간 통신 개략도**
 
 ![nodes](ROS_nodes.png)
 
 + 센서들은 각자 정해진 topic이름으로 자신이 감지하는 data를 발행
++ topic으로 발행되는 data들을 처리하여 각 미션을 통과하는 ROS_node를 만듦 
++ TURTLEBOT은 /cmd_vel topic을 이용하여 속도로 제어
+
+***
+***
+## 3. 알고리즘 설명
+**3.1. 라인트레이싱**
+
+![distort](/readme_images/distorted_image.png)
+
++ 라인트레이싱에 사용되는 Fisheye Image는 시야각이 넓은 대신 왜곡이 매우 심하여 Line검출이 어려움 
++ 따라서 왜곡을 보정해주는 작업이 필요
+***
+~~~
+	np_arr = np.fromstring(ros_data.data, np.uint8)
+	image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+
+	K = np.array([[  220,     0.  ,  320],
+              	  [    0. ,   200,   240],
+              	  [    0. ,   0.  ,  1. ]])
+	# zero distortion coefficients work well for this image
+	D = np.array([0., 0., 0., 0.])
+
+	# use Knew to scale the output
+	Knew = K.copy()
+	Knew[(0,1), (0,1)] = 0.5 * Knew[(0,1), (0,1)]
+	img_undistorted = cv2.fisheye.undistortImage(image_np, K, D=D, Knew=Knew)
+~~~
+![distort](/readme_images/undistorted_image.png)
++ Camera Matrix를 이용하여 왜곡을 보정한 후 Line을 검출
+***
