@@ -475,3 +475,20 @@ def jucha(num,angular): ### Function that run when stage=1
 + line_count : 로봇이 지나친 주차선의 개수
 + 장애물이 없어서 한 번 주차에 성공했다면 평상시(stage = 100)로 돌아와 라인트레이싱
 ***
+
+**3.4. 차단바 구간 (main_move.py)**
+~~~
+def chadan(dist): ### Function that run when stage=2
+
+	if dist<20 and dist>5:
+		turtlemove(0,0)
+		return 2
+
+	else:
+		rospy.sleep(rospy.Duration(2))
+		return 100
+~~~
++ 처음에는 영상 처리를 통해 차단바를 인식하여 미션을 수행하고자 하였으나 과도한 연산으로 인해 SBC(Single-Board Computer)의 과부하를 염려, 연산량이 훨씩 적은 초음파 센서를 이용하여 효율적으로 미션을 수행
++ 로봇 전방에 장착한 HS-SR04가 받아오는 값이 Threshold값보다 작으면 앞에 차단바가 내려왔다고 판단 / 차단바 구간 미션 상태로 돌입 (stage = 2)
++ HS-SR04가 받아오는 값이 Threshold값 범위를 벗어나면 차단바가 올라갔다고 판단 / 평상시로 돌입 (stage = 100)
+***
