@@ -92,3 +92,21 @@
 ![distort](/readme_images/undistorted.png)
 + Camera Matrix를 이용하여 왜곡을 보정한 모습
 ***
+~~~
+gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY) ### Process image to make finding line easy
+ROI=gray[350:,140:500]
+ROI=cv2.GaussianBlur(ROI,(7,7),0)
+thr=cv2.adaptiveThreshold(ROI,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,11,2)
+blur=cv2.medianBlur(thr,9)	
+edge=cv2.Canny(blur,180,360)
+~~~
++ 왜곡을 보정한 Image를 각종 Blur, Thresholding, Canny_Edge 처리
+***
+~~~
+	left_edge=edge[:,:edge.shape[1]/2] ### in left side, it finds only '/'type when jucha stage
+	right_edge=edge[:,edge.shape[1]/2:] ### in right side, it finds only '\'type when jucha stage
+	L_lines=cv2.HoughLines(left_edge,1,np.pi/180,30)
+	R_lines=cv2.HoughLines(right_edge,1,np.pi/180,30)
+~~~
+![distort](/readme_images/undistorted_image.png)
++ HoughLines함수를 통해 도로에 표시된 직선을 검출
