@@ -173,7 +173,27 @@ edge=cv2.Canny(blur,180,360)
 	else:
 		return frame,-0.001
 ~~~
-+ 검출한 직선이 이루는 각도를 구한 뒤 그 각도에 따른 속도를 P제어
++ 검출한 직선이 이루는 각도를 구한 뒤 그 값으로 로봇의 속도를 P제어
 ***
 
-**3.2. 신호등 구간**
+**3.2. 신호등 구간 (main_see.py / turtle_video.py / blob_param.py)**
+
+![sinho](/readme_images/sinho_green.png)
++ 신호등의 초기 상태인 초록 불빛을 로봇이 발견하면 신호등 구간으로 인식하게 한다.
+***
+~~~
+	np_arr = np.fromstring(ros_data.data, np.uint8)
+	image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+
+	####<<< DEFINE_ROI >>>####
+	blob_ROI=image_np[100:,:]
+	parking_ROI=image_np
+	
+	############################<<< Stage Selecting >>>############################	
+	if s_g<2 and stage==100:		
+		keypoints_green=**turtle_video_siljun.find_color(blob_ROI,lower_green,upper_green,0)**
+		if keypoints_green:
+			stage=0
+			print('sinho!')
+~~~
+~~~
