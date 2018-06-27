@@ -259,4 +259,4 @@ def setting(stage):### stage=0 -> shingho , stage=1->parking
 + turtle_video.py에서 blob_param.py에 있는 parameter사용
 + Image에 설정한 크기의 blob을 발견했을 경우 keypoint를 return
 ***
-![sinho](/readme_images/sinho_green.png = 320 * 240) ![sinho](/readme_images/sinho_blob.png)
+![sinho](/readme_images/sinho_green.png=320x240) ![sinho](/readme_images/sinho_blob.png)
