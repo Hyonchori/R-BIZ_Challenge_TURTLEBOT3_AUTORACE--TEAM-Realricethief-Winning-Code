@@ -89,6 +89,6 @@
 	Knew[(0,1), (0,1)] = 0.5 * Knew[(0,1), (0,1)]
 	img_undistorted = cv2.fisheye.undistortImage(image_np, K, D=D, Knew=Knew)
 ~~~
-![distort](/readme_images/undistorted_image.png)
-+ Camera Matrix를 이용하여 왜곡을 보정한 후 Line을 검출
+![distort](/readme_images/undistorted.png)
++ Camera Matrix를 이용하여 왜곡을 보정한 모습
 ***
