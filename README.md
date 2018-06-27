@@ -18,5 +18,5 @@
 ***
 
 ## 1. 개요
-**1.1. 터틀봇3 오토레이스**
-![intro](/TurtleBot3-AutoRace_Intro.png)
+**1.1. 터틀봇3 오토레이스란**
+![intro](readme_images/TurtleBot3-AutoRace_Intro.png)
