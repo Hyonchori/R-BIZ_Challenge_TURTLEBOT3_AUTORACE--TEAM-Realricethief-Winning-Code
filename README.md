@@ -472,7 +472,9 @@ def jucha(num,angular): ### Function that run when stage=1
 
 			return 1
 ~~~
-+ line_count : 로봇이 지나친 주차선의 개수
++ num = [주차선이 검출 되었는가, 주차할 공간이 있는가]
++ line_count : 로봇이 지나친 주차선의 개수 / park_count : 로봇이 주차를 시도한 횟수
++ 로봇이 주차를 시도할 경우 수직 주차를 할 수 있도록 각 모터의 속도를 다르게 조절
 + 장애물이 없어서 한 번 주차에 성공했다면 평상시(stage = 100)로 돌아와 라인트레이싱
 ***
 
