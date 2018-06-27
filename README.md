@@ -317,8 +317,10 @@ def shinho(blob_ROI,stage): ### Function that run when stage=0
 ***
 
 **3.3. 주차 구간 (main_see.py / main_move.py / turtle_video.py / blob_param.py / in_jucha.py)**
+
+![park](/readme_images/parking.jpg)
+
 + 주차 표지판을 인식할 경우 주차 구간 미션 상태(stage = 1)로 돌입
-![park](/readme_images/parking.g)
 ~~~
 ###########################<<< Trainnig parking sign >>>##################################
 
