@@ -24,7 +24,7 @@
 ![intro](readme_images/TurtleBot3-AutoRace_Intro.png)
 
 + 제공받은 플랫폼인 TURTLEBOT3를 이용하여 ROS기반 자율주행 알고리즘 개발
-+ 다양한 센서를 활용해 로봇이 도로 환경에서 마주칠수 있는 상황에 대처할 수 있도록 프로그래밍
++ 다양한 센서 활용해 로봇이 도로 환경에서 마주칠수 있는 상황에 대처할 수 있도록 프로그래밍
 
 **1.2. 주요 미션 구간**
 
@@ -50,13 +50,13 @@
 
 ![algorithm](Algorithm.png)
 
-+ 로봇 구동시 라인트레이싱 / 각 미션의 시작을 알리는 Flag 탐색 시작
++ 로봇 구동시 라인트레이싱 / **각 미션의 시작을 알리는 Flag 탐색 시작**
 + **신호등 구간의 Flag**: 지정한 범위의 HSV값을 갖는 Blob
 + **주차 구간의 Flag**: 좌측면에 장착된 파이캠 Image의 ROI(Region of Interest)내에서 주차 표지판 이미지와 겹치는 부분
 + **차단바 구간의 Flag**: 전방에 장착된 초음파 센서가 감지하는 20cm 이하의 값
 + **터널 구간의 Flag**: 상단에 장착된 초음파 센서가 감지하는 15cm 이하의 값
 
-**2.2. 센서와 노드간 통신 개략도**
+**2.2. 센서와 노드간 토픽 통신 개략도**
 
 ![nodes](ROS_nodes.png)
 
@@ -67,7 +67,7 @@
 ***
 ***
 ## 3. 알고리즘 설명
-**3.1. 라인트레이싱**
+**3.1. 라인트레이싱 (main_move.py / turtle_video.py)**
 
 ![distort](/readme_images/distorted_image.png)
 
@@ -79,8 +79,8 @@
 	image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
 	K = np.array([[  220,     0.  ,  320],
-              	  [    0. ,   200,   240],
-              	  [    0. ,   0.  ,  1. ]])
+              	      [    0. ,   200,   240],
+              	      [    0. ,   0.  ,  1. ]])
 	# zero distortion coefficients work well for this image
 	D = np.array([0., 0., 0., 0.])
 
@@ -110,3 +110,70 @@ edge=cv2.Canny(blur,180,360)
 ~~~
 ![distort](/readme_images/undistorted_image.png)
 + HoughLines함수를 통해 도로에 표시된 직선을 검출
+***
+~~~
+	lineL=[] ### value initializing
+	lineR=[]
+	L=0	
+	R=0
+	i=0
+	Ldegree=0
+	Rdegree=0
+
+	if R_lines is not None:
+		R_lines=[l[0] for l in R_lines]
+		for rho,theta in R_lines:
+    			a = np.cos(theta)
+    			b = np.sin(theta)
+    			x0 = a*rho
+    			y0 = b*rho
+    			x1 = int(x0 + 1000*(-b))
+    			y1 = int(y0 + 1000*(a))
+    			x2 = int(x0 - 1000*(-b))
+    			y2 = int(y0 - 1000*(a))
+			degree=np.arctan2(y2-y1,x2-x1)*180/np.pi
+			if degree>10 and R==0:
+				i+=1
+				Rdegree=degree
+				R+=2
+				cv2.line(frame,(x1+320,y1+160),(x2+320,y2+160),(0,100,100),3)
+				break
+			else:
+				continue
+		
+	if L_lines is not None:
+		L_lines=[l[0] for l in L_lines]
+		for rho,theta in L_lines:
+    			a = np.cos(theta)
+    			b = np.sin(theta)
+    			x0 = a*rho
+    			y0 = b*rho
+    			x1 = int(x0 + 1000*(-b))
+    			y1 = int(y0 + 1000*(a))
+    			x2 = int(x0 - 1000*(-b))
+    			y2 = int(y0 - 1000*(a))
+			degree=np.arctan2(y2-y1,x2-x1)*180/np.pi
+			if degree<-10 and L==0:	
+				i+=1
+				Ldegree=degree
+				L+=2
+				cv2.line(frame,(x1+170,y1+160),(x2+170,y2+160),(0,100,100),3)
+				break
+			else:
+				continue
+~~~
+~~~
+	if i==2:
+		return frame,-(Ldegree+Rdegree)*0.05 ### if there are two lines, then angular_vel depends on difference of angle
+	elif i==1:
+		if Ldegree==0:
+			return frame,-(Rdegree-92)*0.04
+		else:
+			return frame,-(Ldegree+92)*0.04
+	else:
+		return frame,-0.001
+~~~
++ 검출한 직선이 이루는 각도를 구한 뒤 그 각도에 따른 속도를 P제어
+***
+
+**3.2. 신호등 구간**
