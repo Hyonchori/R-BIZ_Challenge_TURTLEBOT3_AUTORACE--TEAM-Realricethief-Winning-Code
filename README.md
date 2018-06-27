@@ -36,8 +36,11 @@
 ![robot](Hardware_item.png)
 
 + 기존 TURTLEBOT3에 첨부된 Lidar이외에 별도의 센서들 장착
-+ 신호등, 표지판, 도로선을 인식/검출하기 위한 파이캠, 웹캠
-+ 차단바, 터널을 효과적으로 감지하기 위한 초음파센서
++ 라인트레이싱 사용 센서: Raspberry-Pi-Cam Fish-Eye
++ 신호등 구간 사용 센서: Rasberry-Pi-Cam Noir
++ 주차 구간 사용 센서: Rasberry-Pi-Cam Noir, C920 Web Cam 
++ 차단바 구간 사용 센서: HS-SR04 Ultrasonic Sensor
++ 터널 구간 사용 센서: HS-SR04 Ultrasoni Sensor, LDS-01 Lidar
 
 ## 2. 주행 알고리즘
 **2.1. 전체 알고리즘 개략도**
@@ -45,8 +48,13 @@
 ![algorithm](Algorithm.png)
 
 + 로봇 구동시 라인트레이싱 / 각 미션의 시작을 알리는 Flag 탐색 시작
++ 신호등 구간의 Flag: 지정한 범위의 HSV값을 갖는 Blob
++ 주차 구간의 Flag: 좌측면에 장착된 파이캠 Image의 ROI(Region of Interest)내에서 주차 표지판 이미지와 겹치는 부분
++ 차단바 구간의 Flag: 전방에 장착된 초음파 센서가 감지하는 20cm 이하의 값
++ 터널 구간의 Flag: 상단에 장착된 초음파 센서가 감지하는 15cm 이하의 값
 
+**2.2. 센서와 노드간 통신 개략도**
 
+![nodes](ROS_nodes.png)
 
-
-![node](ROS_nodes.png)
++ 센서들은 각자 정해진 topic이름으로 자신이 감지하는 data를 발행
