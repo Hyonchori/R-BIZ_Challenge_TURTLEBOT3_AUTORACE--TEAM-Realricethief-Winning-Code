@@ -314,6 +314,7 @@ def shinho(blob_ROI,stage): ### Function that run when stage=0
 ~~~
 + 두번째로 초록 불빛을 감지했을 때 실행되는 코드
 + 신호등 구간 미션을 완수하고 평상시로 돌아감(stage = 100)
+***
 
 **3.3. 주차 구간 (main_see.py / main_move.py / turtle_video.py / blob_param.py / in_jucha.py)**
 + 주차 표지판을 인식할 경우 주차 구간 미션 상태(stage = 1)로 돌입
@@ -349,4 +350,126 @@ kpTrain, desTrain = orb.compute(imgTrainGray, kpTrain)
 + 주차 구간 미션 상태 돌입(stage = 1)
 ***
 ~~~
+def checking_parking_space(ros_data): ### using web_cam, check white_blob and line and enough distance, if all exist, it send Availablity
+    
+	global white_detected; global park_enable; global d
+    	
+	np_arr 		= np.fromstring(ros_data.data, np.uint8) ### image process
+	frame 		= cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+	hsv 		= cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
+	mask_white 	= cv2.inRange(hsv,lower_white,upper_white)
+	res1 		= cv2.bitwise_and(frame,frame,mask=mask_white)
 
+	line 		= turtle_video_siljun.find_line(frame) ### Checking if there are lines
+	keypoints 	= turtle_video_siljun.find_white(frame, lower_white, upper_white) ### Checking if there are white
+	
+
+	if (line > 0) and keypoints:
+		white_detected=1   		### check white line
+	else:
+		white_detected=0
+
+	n=1
+	for i in d:
+		if (i > 0.12) and (i < 0.6):
+			n = 0					### check parking space
+	if n == 0:
+		park_enable=0
+	else:
+		park_enable=1	
+~~~
++ 주차 구간 미션 상태에 돌입 시 실행되는 코드
++ 로봇 우측에 장착한 C920 Web-Cam이 받은 Image와 LDS-01 Lidar가 받는 Distance data를 처리하여 주차 가능 여부 판단 
++ C920으로 로봇이 지나친 주차선의 개수 판단(총 3개) / LDS-01로 주차 공간에 장애물이 있는지 판단
++ 주차선을 1개, 2개 지나칠 때 우측 전방에 장애물이 있는지 판단 후 없으면 주차 동작 코드 실행
+***
+~~~
+def jucha(num,angular): ### Function that run when stage=1
+
+	global line_count; global park_count; global lt;
+	print(line_count)
+
+	if line_count==0:
+		if num[0]==0:
+			turtlemove(0.1,angular)
+			return 1
+
+		else:
+			line_count=1
+			return 1
+
+	elif line_count==1:
+		if num[0]==1 and lt==0:
+			turtlemove(0.1,angular)
+			return 1
+
+		elif num[0]==0 and lt==0:
+			if num[1]==1:
+				turtlemove(0.11,-0.7)
+				rospy.sleep(rospy.Duration(2))
+				turtlemove(0.1,0)
+				rospy.sleep(rospy.Duration(1.7))
+				turtlemove(0,0)
+				rospy.sleep(time)
+				turtlemove(-0.1,0)
+				rospy.sleep(rospy.Duration(1.7))
+				turtlemove(-0.11,0.7)
+				rospy.sleep(rospy.Duration(2))
+				turtlemove(0,0)	
+				park_count=1
+				lt=1
+				return 100
+
+			else:
+				lt=1
+				return 1
+			
+		else:	
+			if angular<1.9:		
+				turtlemove(0.09,angular)
+			else:
+				turtlemove(0.06,0)
+
+			if num[0]==1:				
+				line_count=2
+				return 1
+
+			return 1
+
+	elif line_count==2:
+
+		if num[0]==1 and lt==1:
+			turtlemove(0.09,angular)
+			return 1
+
+		elif num[0]==0 and park_count==0 and lt==1:
+			turtlemove(0.11,-0.7)
+			rospy.sleep(rospy.Duration(2))
+			turtlemove(0.1,0)
+			rospy.sleep(rospy.Duration(2))
+			turtlemove(0,0)
+			rospy.sleep(time)
+			turtlemove(-0.1,0)
+			rospy.sleep(rospy.Duration(2))
+			turtlemove(-0.11,0.7)
+			rospy.sleep(rospy.Duration(2))
+			turtlemove(0,0)
+			lt=2
+			return 100
+
+		elif park_count==1 and lt==1:
+			lt=2
+			return 1
+		else:
+			turtlemove(0.09,angular)
+
+			if num[0]==1:
+				line_count=3
+				print(line_count)
+				return 100
+
+			return 1
+~~~
++ line_count : 로봇이 지나친 주차선의 개수
++ 장애물이 없어서 한 번 주차에 성공했다면 평상시(stage = 100)로 돌아와 라인트레이싱
+***
