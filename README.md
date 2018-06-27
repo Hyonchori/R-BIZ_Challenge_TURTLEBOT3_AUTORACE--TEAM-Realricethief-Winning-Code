@@ -191,9 +191,72 @@ edge=cv2.Canny(blur,180,360)
 	
 	############################<<< Stage Selecting >>>############################	
 	if s_g<2 and stage==100:		
-		keypoints_green=**turtle_video_siljun.find_color(blob_ROI,lower_green,upper_green,0)**
+		keypoints_green=turtle_video_siljun.find_color(blob_ROI,lower_green,upper_green,0)
 		if keypoints_green:
 			stage=0
 			print('sinho!')
 ~~~
 ~~~
+def find_color(frame,lower,upper,stage):  ### Color detecting to find sinho_signal or jucha_sign
+
+	detector = blob_param_siljun.setting(stage)
+	hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV) ### process rgb_image to hsv_image 
+	mask_red = cv2.inRange(hsv,lower,upper)
+	reversmask = 255-mask_red                   ### Detect blobs
+	keypoints = detector.detect(reversmask)
+	
+	if stage==0:
+		cv2.imshow('zzz',reversmask)
+        
+	if len(keypoints)>0 and stage==1:
+		point=[]	
+		for i in keypoints:
+			point.append(i.pt)	
+		return point
+    
+	elif stage==0:	
+		return keypoints
+    
+	#return keypoints ### return whether it finds color
+~~~
+~~~
+def setting(stage):### stage=0 -> shingho , stage=1->parking
+
+	if stage==0: #shinho
+		# Setup SimpleBlobDetector parameters.
+		params = cv2.SimpleBlobDetector_Params()
+		 
+		# Change thresholds
+		params.minThreshold = 0;
+		params.maxThreshold = 256;
+		 
+		# Filter by Area.
+		params.filterByArea = True
+		params.minArea = 500
+		params.maxArea=2300
+		 
+		# Filter by Circularity
+		params.filterByCircularity = True
+		params.minCircularity = 0.4
+		 
+		# Filter by Convexity
+		params.filterByConvexity = True
+		params.minConvexity = 0.1
+		 
+		# Filter by Inertia
+		params.filterByInertia = False
+		params.minInertiaRatio = 0.01
+		 
+		# Create a detector with the parameters
+		ver = (cv2.__version__).split('.')
+		if int(ver[0]) < 3 :
+		    detector = cv2.SimpleBlobDetector(params)
+		else : 
+		    detector = cv2.SimpleBlobDetector_create(params)
+		return detector
+~~~
++ main_see.py에서 Pi-Cam Noir가 받은 Image를 turtle_video.py의 함수로 처리
++ turtle_video.py에서 blob_param.py에 있는 parameter사용
++ Image에 설정한 크기의 blob을 발견했을 경우 keypoint를 return
+***
+![sinho](/readme_images/sinho_green.png) ![sinho](/readme_images/sinho_blob.png)
