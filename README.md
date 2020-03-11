@@ -74,7 +74,7 @@
 + 라인트레이싱에 사용되는 Fisheye Image는 시야각이 넓은 대신 왜곡이 매우 심하여 Line검출이 어려움 
 + 따라서 왜곡을 보정해주는 작업이 필요
 ***
-~~~
+~~~python
 	np_arr = np.fromstring(ros_data.data, np.uint8)
 	image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
@@ -102,7 +102,7 @@ edge=cv2.Canny(blur,180,360)
 ~~~
 + 왜곡을 보정한 Image를 각종 Blur, Thresholding, Canny_Edge 처리
 ***
-~~~
+~~~python
 	left_edge=edge[:,:edge.shape[1]/2] ### in left side, it finds only '/'type when jucha stage
 	right_edge=edge[:,edge.shape[1]/2:] ### in right side, it finds only '\'type when jucha stage
 	L_lines=cv2.HoughLines(left_edge,1,np.pi/180,30)
@@ -111,7 +111,7 @@ edge=cv2.Canny(blur,180,360)
 ![distort](/readme_images/undistorted_image.png)
 + HoughLines함수를 통해 도로에 표시된 직선을 검출
 ***
-~~~
+~~~python
 	lineL=[] ### value initializing
 	lineR=[]
 	L=0	
@@ -162,7 +162,7 @@ edge=cv2.Canny(blur,180,360)
 			else:
 				continue
 ~~~
-~~~
+~~~python
 	if i==2:
 		return frame,-(Ldegree+Rdegree)*0.05 ### if there are two lines, then angular_vel depends on difference of angle
 	elif i==1:
@@ -181,7 +181,7 @@ edge=cv2.Canny(blur,180,360)
 ![sinho](/readme_images/sinho_green.png)
 + 로봇이 신호등의 초기 상태인 초록 불빛을 발견하면 신호등 구간으로 인식
 ***
-~~~
+~~~python
 	np_arr = np.fromstring(ros_data.data, np.uint8)
 	image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
@@ -196,7 +196,7 @@ edge=cv2.Canny(blur,180,360)
 			stage=0
 			print('sinho!')
 ~~~
-~~~
+~~~python
 def find_color(frame,lower,upper,stage):  ### Color detecting to find sinho_signal or jucha_sign
 
 	detector = blob_param_siljun.setting(stage)
@@ -219,7 +219,7 @@ def find_color(frame,lower,upper,stage):  ### Color detecting to find sinho_sign
     
 	#return keypoints ### return whether it finds color
 ~~~
-~~~
+~~~python
 def setting(stage):### stage=0 -> shingho , stage=1->parking
 
 	if stage==0: #shinho
@@ -263,7 +263,7 @@ def setting(stage):### stage=0 -> shingho , stage=1->parking
 + Threshold값 이상의 blob이 잡힌 모습
 + TURTLEBOT은 평소 상태(stage = 100)에서 신호등 구간 미션 상태(stage = 0)로 돌입
 ***
-~~~
+~~~python
 def shinho(blob_ROI,stage): ### Function that run when stage=0
 
 	global f_r; global s_g; global sinho_state
@@ -288,7 +288,7 @@ def shinho(blob_ROI,stage): ### Function that run when stage=0
 + 처음 초록 불빛을 감지하여 신호등 구간에 진입하면 붉은 불빛을 발견할 때까지 서행
 + sinho_state = [f_r, s_g, keypoints_red]
 ***
-~~~
+~~~python
 	if f_g==1 and f_r==1 and s_g==0:
 		keypoints_green=turtle_video_siljun.find_color(blob_ROI,lower_green,upper_green,stage)	
 		print('red signal detected. waiting secondary green signal.')
@@ -304,7 +304,7 @@ def shinho(blob_ROI,stage): ### Function that run when stage=0
 + 첫번째 붉은 불빛을 감지했을 때 실행되는 코드
 + 두번째로 초록 불빛을 감지할 때까지 정지
 ***
-~~~
+~~~python
     if f_g == 1 and f_r == 1 and s_g == 1:
         print('second green signal detected.')
         s_g = 2
@@ -321,7 +321,7 @@ def shinho(blob_ROI,stage): ### Function that run when stage=0
 ![park](/readme_images/parking.jpg)
 
 + 주차 표지판을 인식할 경우 주차 구간 미션 상태(stage = 1)로 돌입
-~~~
+~~~python
 ###########################<<< Trainnig parking sign >>>##################################
 
 orb = cv2.ORB_create()
@@ -335,7 +335,7 @@ kpTrain, desTrain = orb.compute(imgTrainGray, kpTrain)
 
 #########################################################################################
 ~~~
-~~~
+~~~python
     if line_count < 3 and stage == 100:
         keypoints_blue = turtle_video_siljun.find_color(parking_ROI, lower_blue, upper_blue, 1)
         if keypoints_blue:
@@ -351,7 +351,7 @@ kpTrain, desTrain = orb.compute(imgTrainGray, kpTrain)
 + 서로 Matching하여 일정 threshold값 이상이 같으면 주차 표지판이라고 인식
 + 주차 구간 미션 상태 돌입(stage = 1)
 ***
-~~~
+~~~python
 def checking_parking_space(ros_data): ### using web_cam, check white_blob and line and enough distance, if all exist, it send Availablity
     
 	global white_detected; global park_enable; global d
@@ -385,7 +385,7 @@ def checking_parking_space(ros_data): ### using web_cam, check white_blob and li
 + C920으로 로봇이 지나친 주차선의 개수 판단(총 3개) / LDS-01로 주차 공간에 장애물이 있는지 판단
 + 주차선을 1개, 2개 지나칠 때 우측 전방에 장애물이 있는지 판단 후 없으면 주차 동작 코드 실행
 ***
-~~~
+~~~python
 def jucha(num,angular): ### Function that run when stage=1
 
 	global line_count; global park_count; global lt;
