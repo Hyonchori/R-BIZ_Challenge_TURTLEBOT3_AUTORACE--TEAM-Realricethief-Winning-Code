@@ -479,7 +479,7 @@ def jucha(num,angular): ### Function that run when stage=1
 ***
 
 **3.4. 차단바 구간 (main_move.py)**
-~~~
+~~~python
 def chadan(dist): ### Function that run when stage=2
 
 	if dist<20 and dist>5:
